@@ -13,6 +13,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * @ORM\Entity(repositoryClass=PropertyRepository::class)
  * @UniqueEntity("title")
+ * @ORM\HasLifecycleCallbacks()
  */
 class Property
 {
@@ -92,18 +93,22 @@ class Property
     private $sold = false;
 
     /**
+     * @ORM\ManyToMany(targetEntity=Option::class, inversedBy="properties")
+     */
+    private $options;
+
+    /**
      * @ORM\Column(type="datetime")
      */
     private $created_at;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Option::class, inversedBy="properties")
+     * @ORM\Column(type="datetime", nullable=true)
      */
-    private $options;
+    private $updateAt;
 
     public function __construct()
     {
-        $this->created_at = new \DateTime();
         $this->options = new ArrayCollection();
     }
 
@@ -270,17 +275,7 @@ class Property
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
-    {
-        return $this->created_at;
-    }
 
-    public function setCreatedAt(\DateTimeInterface $created_at): self
-    {
-        $this->created_at = $created_at;
-
-        return $this;
-    }
 
     /**
      * @return Collection|Option[]
@@ -305,6 +300,37 @@ class Property
         if ($this->options->removeElement($option)) {
             $option->removeProperty($this);
         }
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeInterface
+    {
+        return $this->created_at;
+    }
+
+    /**
+     * @ORM\PrePersist()
+     */
+    public function setCreatedAt(\DateTimeInterface $created_at): self
+    {
+        $this->created_at = new \DateTime();
+
+        return $this;
+    }
+
+    public function getUpdateAt(): ?\DateTimeInterface
+    {
+        return $this->updateAt;
+    }
+
+    /**
+     * @ORM\PreUpdate()
+     * @ORM\PrePersist()
+     */
+    public function setUpdateAt(?\DateTimeInterface $updateAt): self
+    {
+        $this->updateAt = $updateAt;
 
         return $this;
     }
